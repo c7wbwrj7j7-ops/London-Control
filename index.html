@@ -1,0 +1,652 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arrival Manager</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--tx:#14202b;--mut:#5d6b78;--ln:#d5dce3;--ac:#1b6ef3;--ok:#1a7f4b;--wa:#b45309;--bad:#c0262d;--fast:#0e7490;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f151b;--card:#18212a;--tx:#e6edf3;--mut:#9aa7b4;--ln:#2b3743;--ac:#5b9bff;--ok:#4cc38a;--wa:#f0a64b;--bad:#ff7b81;--fast:#4fd1e8}}
+:root[data-theme="dark"]{--bg:#0f151b;--card:#18212a;--tx:#e6edf3;--mut:#9aa7b4;--ln:#2b3743;--ac:#5b9bff;--ok:#4cc38a;--wa:#f0a64b;--bad:#ff7b81;--fast:#4fd1e8}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;padding:12px 12px 40px}
+h1{font-size:19px;margin:0 0 10px}h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 8px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px;max-width:100%}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:end}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--ln);border-radius:8px;padding:8px 10px;min-height:40px}
+input{width:92px}input.w{width:110px}
+button{cursor:pointer;background:var(--ac);color:#fff;border:0;font-weight:600}
+button.g{background:transparent;color:var(--mut);border:1px solid var(--ln)}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:6px 8px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--ln)}
+th{font-size:12px;color:var(--mut);font-weight:600}
+td.r,th.r{text-align:right}
+.tag{padding:2px 7px;border-radius:99px;font-size:12px;font-weight:700;border:1px solid currentColor}
+.HOLD{color:var(--bad)}.SLOW{color:var(--wa)}.FAST{color:var(--fast)}.ACT{color:var(--ok)}
+tr.act td{color:var(--mut)}
+td input{width:84px;min-height:34px;padding:4px 6px}
+td button{min-height:34px;padding:4px 10px}
+pre{margin:0;font:13px/1.5 ui-monospace,Menlo,monospace;overflow-x:auto}
+.sum{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);font-size:13px;margin-top:8px}
+.sum b{color:var(--tx)}
+.msg{color:var(--bad);font-size:13px;min-height:18px;margin-top:6px}
+.fxg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
+.fxg .card{margin:0;padding:10px}
+.fxg .row{gap:6px}.fxg input{width:68px}
+td.h{cursor:grab;touch-action:none;color:var(--mut);font-size:18px;user-select:none;-webkit-user-select:none;padding:6px 12px}
+tr.drg{opacity:.45}tr.over td{border-top:2px solid var(--ac)}
+</style>
+</head>
+<body>
+<h1>Arrival Manager</h1>
+<details class="card" id="manual">
+<summary style="cursor:pointer;font-weight:700;font-size:15px">Manual (tap to open)</summary>
+<style>
+#manual h3{font-size:14px;margin:16px 0 4px}#manual p,#manual li{margin:4px 0}#manual ul{padding-left:20px;margin:4px 0}
+#manual table{font-size:13px;margin:6px 0}#manual td,#manual th{white-space:normal;vertical-align:top}#manual code{background:var(--bg);padding:1px 5px;border-radius:5px}
+#manual details{border-top:1px solid var(--ln);padding:8px 0}#manual details>summary{cursor:pointer;font-weight:600}
+</style>
+
+<details open><summary>1. Quick start</summary>
+<ul>
+<li><b>Set the route:</b> at the bottom, in the settings per fix: the shortest route from each fix to the merge point (for example 12:00). This is the shortest way at 250 kt.</li>
+<li><b>Sim time:</b> enter the simulator time in <i>Sim time</i>. The app never uses the clock of the device. Aircraft that are past the merge are deleted. The last one stays as leader, so the separation behind it is correct.</li>
+<li><b>Add an aircraft:</b> callsign, category, fix and the estimated time over the fix. If you enter the same callsign again, it is updated (the first ETA is kept).</li>
+<li><b>During the session:</b> enter <b>ato</b> when an aircraft is over the fix, and <b>act</b> when it is over the merge. The app learns from this and builds statistics.</li>
+<li><b>All times are sim time</b> in HH:MM or HH:MM:SS. Data stays only on this device (an iPad and a PC each have their own data).</li>
+</ul>
+</details>
+
+<details><summary>2. The sequence table, column by column</summary>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>⠿</td><td>Handle. Drag a row to set the order yourself. <i>Auto order</i> goes back to the automatic order (and removes LOCKs).</td></tr>
+<tr><td>1st ETA</td><td><b>Bold.</b> The first estimate over the fix, given at the first call. This is the reference for everything (Total loss is counted from here) and it is always kept.</td></tr>
+<tr><td>Over fix</td><td>Time over the fix. <b>A</b> = actual (ato), <b>H</b> = actual out of the hold (second ato).</td></tr>
+<tr><td>ETA merge</td><td>Over fix + route: the time the aircraft is at the merge without any delay.</td></tr>
+<tr><td>Merge</td><td>Planned time over the merge point. For aircraft with act, the real time is shown here.</td></tr>
+<tr><td>Loss</td><td>Planned merge minus the current ETA. Negative = earlier than ETA (flying faster).</td></tr>
+<tr><td>Total loss</td><td>Total delay compared to the <b>first ETA</b> (the estimate at the first call). This also includes coming over the fix later and the hold. Together with the EFC column, you see what an aircraft costs in the end.</td></tr>
+<tr><td>Action</td><td><b>SLOW</b> = lower the speed or use vectors. <b>HOLD nx</b> = hold n circuits. <b>FAST</b> = fly faster. <b>IN HOLD nx</b> = is already in the hold (it never gets SLOW or FAST). <b>STILL IN HOLD nx</b> = the expected circuits are finished, but the aircraft is not out of the hold yet. <b>VEC+</b> = unable hold, more vectors than normal.</td></tr>
+<tr><td>EFC</td><td>Expected further clearance out of the hold (see chapter 5). Empty = no hold. You can fill it in yourself.</td></tr>
+<tr><td>Gap</td><td>Time to the aircraft in front: separation plus buffer.</td></tr>
+<tr><td>Suggestion</td><td>Position and time difference in the optimal order (see chapter 4). <b>=</b> means the same.</td></tr>
+<tr><td>Actual fix</td><td>Field <b>ato</b>: actual over the fix. Enter the same field a second time when the aircraft leaves the hold (over the fix again): the app sees this by itself as "out of the hold". Then you see both times, separated by /. <b>clear</b> removes the second time first, then the first.</td></tr>
+<tr><td>Actual merge</td><td>Field <b>act</b>: actual over the merge point.</td></tr>
+<tr><td>Holds</td><td>Number of circuits flown. Leave empty = automatic; type a number to correct it. After this is the source (see chapter 6).</td></tr>
+<tr><td>Event</td><td>Tags (FUEL, MED, PRIO, LOCK, COMMIT, NO STAT, ...) and buttons: <b>unable hold</b>, <b>lock</b>, <b>prio</b>, <b>no stat</b>.</td></tr>
+</table>
+</details>
+
+<details><summary>3. How the order is decided</summary>
+<ul>
+<li><b>The base is FIFO</b> on ETA merge. An aircraft may move forward or back by at most <b>Max shift</b> places, if this makes the total delay smaller.</li>
+<li><b>Separation:</b> the 6-category wake table (J, H, U, M, S, L) in nm, changed to seconds with the final speed (default 160 kt), plus the <b>Buffer</b> (default 20 s). A Super as following aircraft uses the Heavy column.</li>
+<li><b>Solving delay:</b> first with vectors or speed (<i>+Extra</i> per fix, default 3:00). If more is needed, with complete <b>hold circuits</b> (default 6:00). Flying faster (<i>-Faster</i>, default 1:00) is used only if it helps an aircraft behind.</li>
+<li><b>Fairness:</b> an aircraft that has already flown circuits counts more. <b>Max holds</b> (default 2) limits the number of circuits per aircraft, but not strictly: the app gives a warning if it becomes more. <b>Fairness</b> (default 600) gives a penalty for a big delay for one aircraft; a lower number is stricter, 0 = off.</li>
+<li><b>Fixing:</b> when an aircraft is over the fix (ato or sim time), its hold is fixed. An aircraft in the hold stays at least the circuits that are already flown, and an aircraft that is out of the hold is never put back in a hold. If the EAT is past, the merge time is fixed (<b>COMMIT</b>).</li>
+<li><b>Prio</b> gives an aircraft its own ETA (for example a medical aircraft, or a Super that waited a long time); the others are planned around it. <b>Lock</b> keeps the current merge time of an aircraft. If not all of this is possible, a warning is shown and they are ignored for the moment.</li>
+</ul>
+</details>
+
+<details><summary>4. Suggestion and adopting it</summary>
+<ul>
+<li>Your current sequence does not change by itself. The app also calculates a <b>suggestion</b> with more freedom (<i>Shift suggestion</i>, default 10).</li>
+<li>If the suggestion is better, you see the column <i>Suggestion</i> and a block with the order, the gain in total delay and the action for each aircraft.</li>
+<li><b>Adopt</b> fixes the suggestion (LOCK). <b>Auto order</b> or <b>unlock</b> releases it again.</li>
+<li>The suggestion is calculated only for a maximum of 11 free aircraft.</li>
+</ul>
+</details>
+
+<details><summary>5. Holding, EAT and EFC</summary>
+<ul>
+<li><b>EAT</b> = expected departure from the hold according to the plan: time over the fix plus complete circuits.</li>
+<li><b>EFC</b> (expected further clearance) = the moment you release the aircraft from the hold towards the merge. By default this is the EAT. You can <b>fill in the EFC yourself</b> in the EFC column (HH:MM:SS); a ✎ shows that it is manual. Make it empty = automatic again.</li>
+<li>With a manual EFC, the time in the hold is exact (no longer in complete circuits). After that, the aircraft flies the route, so <b>the earliest merge is EFC + route</b>. Everything behind it is planned on this automatically.</li>
+<li><b>Unable hold</b>: the aircraft cannot hold (any more). The plan then solves the delay with vectors or puts others behind it.</li>
+<li><b>Out of the hold</b>: when an aircraft leaves the hold, you enter a time again in <i>Actual fix</i> (same field). The first ETA and the first ato are kept.</li>
+</ul>
+</details>
+
+<details><summary>6. How the app decides the number of holds</summary>
+<p>You do not need to count the circuits. The app chooses in this order:</p>
+<ol>
+<li><b>typed</b>: the number you enter in Holds (always wins).</li>
+<li><b>ato2</b>: measured from the second ato (out of hold minus first ato, divided by the circuit time). This is the most reliable source.</li>
+<li><b>deriv</b> (derived): from act − ato − route.</li>
+<li><b>plan</b>: the number with which the hold was fixed.</li>
+</ol>
+<p>A <b>?</b> after the source means that the derived number is uncertain. Such an aircraft is not used in the learned route, until you type the number.</p>
+</details>
+
+<details><summary>7. Events and randomizer</summary>
+<ul>
+<li><b>Fuel</b>: maximum delay in minutes; the app gives a warning if the plan is more than this. <b>Medical</b>: gets priority (prio). <b>Long final</b>: extra seconds of separation behind this aircraft. <b>Unable hold</b> and <b>unable to fly faster</b>.</li>
+<li><b>Random</b>: the app sometimes gives an event to a random aircraft (you can set it: every N actions, chance in %). This is useful for practice. <i>Event now</i> forces one immediately.</li>
+<li>The log with events is below the card.</li>
+</ul>
+</details>
+
+<details><summary>8. Statistics and score</summary>
+<ul>
+<li><b>Over the fix</b>: actual minus first ETA. How good was the estimate?</li>
+<li><b>Over the merge</b>: actual minus planned. How correct was the plan?</li>
+<li><b>Fix to merge without hold</b>: the real travel time. The hold time is taken away (act − ato2, or act − ato − circuits). This is what the route really costs; <i>Avg extra</i> is the difference with the route you set.</li>
+<li><b>Learned route</b>: with <i>Average route = on</i>, the app uses for each fix the average of your own observations instead of the route you set (at least <i>Min. observations</i>). See the line "Route used".</li>
+<li><b>No stat</b>: excludes an aircraft from statistics, score and learned routes (useful when you improvise).</li>
+<li><b>Score (0–100)</b>: Accuracy 30 (actual vs planned, ±15 s), Efficiency 25 (average loss), Fairness 15 (maximum loss, up to 3 min free), Few holds 15, Tight arrivals 15 (few gaps). Gaps smaller than the separation are only reported, not scored.</li>
+</ul>
+</details>
+
+<details><summary>9. Settings</summary>
+<table>
+<tr><td>Route (set)</td><td>Shortest route fix → merge.</td></tr>
+<tr><td>+Extra</td><td>How much delay you can make with vectors or speed after the holding fix.</td></tr>
+<tr><td>-Faster</td><td>How much earlier an aircraft can be by flying faster.</td></tr>
+<tr><td>Hold</td><td>Time of one circuit.</td></tr>
+<tr><td>Buffer</td><td>Extra seconds between each pair of aircraft, on top of the separation.</td></tr>
+<tr><td>Max shift / Shift suggestion</td><td>How many places an aircraft may move compared to FIFO (current sequence / suggestion). 0 = pure FIFO.</td></tr>
+<tr><td>Max holds / Fairness</td><td>See chapter 3.</td></tr>
+<tr><td>Final (kt)</td><td>Speed on final, to change nm to time.</td></tr>
+<tr><td>Clear all</td><td>Deletes all aircraft, the log and the settings on this device.</td></tr>
+</table>
+</details>
+
+<details><summary>10. Tips for busy moments</summary>
+<ul>
+<li>The minimum: <b>ato</b> at the fix, <b>ato</b> again when leaving the hold, <b>act</b> at the merge. The app calculates the rest.</li>
+<li>An aircraft that is always put at the back (for example a Super)? Set <b>prio</b>, or lower <i>Max holds</i> / <i>Fairness</i>.</li>
+<li><b>Same fix, fixed order:</b> aircraft that are already over the same fix are never overtaken by an aircraft that came over that fix later, except if the first one is in the hold. Events (fuel, medical, long final) and prio are still excepted.</li>
+<li><b>Still in hold:</b> an aircraft that is put in the hold stays in it (status <b>STILL IN HOLD</b>, always the next circuit as the earliest exit) until you enter its second actual fix time or an EFC. So even if the expected circuits are finished, it does not move into the sequence without notice. With the button <b>in hold</b> you put an aircraft in the hold yourself (and out again).</li>
+<li><b>Pop-up for illogical times:</b> if you enter a time that would make the statistics wrong, a warning is shown. This happens for: ato more than 10 min earlier or 15 min later than the first ETA; 2nd ato less than 2 min after the first (no hold); a time on or after the act; act not later than the ato; fix&rarr;merge faster than 60% of the route; or a separation to the neighbour aircraft that is well below the minimum. Choose <b>OK</b> to save anyway, or <b>Cancel</b> and then choose if you save the aircraft but exclude it from statistics (no stat), or save nothing.</li>
+<li>If you improvise with an aircraft, set <b>no stat</b> on so that your statistics stay correct.</li>
+<li>Did you change something by mistake? <b>Undo</b> reverses the last change.</li>
+<li><b>Space</b> shows gaps where one more aircraft fits and the first free slot behind the last one.</li>
+<li>For a big gap in the hold: look at <i>Suggestion</i> and think about an earlier EFC for an aircraft in the hold.</li>
+</ul>
+</details>
+</details>
+
+
+<div class="card">
+<h2>Add or update aircraft</h2>
+<div class="row">
+<label>Callsign<input id="call" class="w" autocapitalize="characters"></label>
+<label>Cat<select id="cat"><option>J</option><option selected>H</option><option>U</option><option>M</option><option>S</option><option>L</option></select></label>
+<label>Fix<select id="fix"></select></label>
+<label>Time over fix<input id="t" class="w" placeholder="14:23" inputmode="numeric"></label>
+<button id="add">Add</button>
+</div>
+<div class="msg" id="msg"></div>
+</div>
+
+<div class="card">
+<h2>Sim time</h2>
+<div class="row">
+<label>Now (HH:MM:SS)<input id="now" class="w" placeholder="14:10"></label>
+<button id="setnow">Set time</button>
+<button class="g" id="clrnow">Clear</button>
+<span id="nowinfo" style="color:var(--mut);font-size:13px"></span>
+</div>
+</div>
+
+<div class="card">
+<h2>Sequence</h2>
+<div class="row" style="margin-bottom:8px;align-items:center"><button class="g" id="auto">Auto order</button><button class="g" id="undo">Undo</button><span id="mode" style="color:var(--mut);font-size:13px"></span></div>
+<div class="sc" id="tbl"></div>
+<div class="sum" id="sum"></div>
+<div class="sum" id="sug" style="display:block"></div>
+<div class="sum" id="lrn"></div>
+<div class="sum" id="warn" style="color:var(--bad)"></div>
+</div>
+
+<div class="card"><h2>Space</h2><div id="space"></div></div>
+<div class="card"><h2>Events</h2>
+<div class="row"><label>Aircraft<select id="evac"></select></label>
+<label>Type<select id="evk"><option value="fuel">fuel (max delay, min)</option><option value="med">medical (priority)</option><option value="long">long final (+s behind)</option><option value="nohold">unable hold</option><option value="nofast">unable fly faster</option><option value="clear">clear events</option></select></label>
+<label>Value<input id="evv" placeholder="6"></label><button id="evset">Set</button></div>
+<div class="row" style="margin-top:10px"><label>Random<select id="rnd"><option value="0">off</option><option value="1">on</option></select></label>
+<label>Every N actions<input id="rne"></label><label>Chance %<input id="rnp"></label><button id="rnow">Event now</button></div>
+<div id="evlog" style="margin-top:10px;font-size:13px;color:var(--mut)"></div></div>
+<div class="card"><h2>Timeline</h2><pre id="tl"></pre></div>
+<div class="card"><h2>Score and statistics</h2><div class="sc" id="stats"></div></div>
+
+<div class="card">
+<h2>Settings per fix (shortest route, extra, faster, hold circuit; min or m:ss)</h2>
+<div class="fxg" id="fxs"></div>
+<div class="row" style="margin-top:10px">
+<label>Buffer (s)<input id="buf"></label>
+<label>Max shift<input id="shift"></label><label>Shift suggestion<input id="sshift"></label><label>Max holds<input id="maxhold"></label><label>Fairness<input id="fair"></label>
+<label>Final (kt)<input id="spd"></label>
+<label>Average route<select id="lrnon"><option value="1">on</option><option value="0">off</option></select></label>
+<label>Min. observations<input id="lmin"></label>
+<button class="g" id="reset">Clear all</button>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ===== CORE: same model and rules as sequence.py (state shape is identical) ===== */
+const FX=["BNN","LAM","BIG","OCK"],CATS=["J","H","U","M","S","L"],FOLLOW=["H","U","M","S","L"];
+const KEY="arrival-manager-v2",OLDKEY="arrival-manager-v1";
+const STD_KT=250,ADV=0.25,FAST_MIN=15,SURE_S=30;
+const per=v=>Object.fromEntries(FX.map(f=>[f,v]));
+const defCfg=()=>({route:per(720),absorb:per(180),gain:per(60),circuit:per(360),
+ sep:{J:[6,7,7,7,8],H:[4,5,5,6,7],U:[3,3,4,4,6],M:[3,3,3,3,5],S:[3,3,3,3,3],L:[3,3,3,3,3]},
+ min_clean:{J:220,H:210,U:195,M:185,S:150,L:120},final_kt:160,fast_kt:280,shift:1,sugg_shift:10,buffer:20,
+ max_hold:2,fair:600,learn:true,learn_min:1,ask_every:5,tol:15,rand_on:false,rand_every:6,rand_prob:0.6});
+const defState=()=>({cfg:defCfg(),acs:[],log:[],events:[],now:null,manual:null});
+let S=defState(),LEARNED={};
+
+const mkAc=(call,cat,fix,est)=>({call,cat,fix,est,est0:est,ato:null,ato2:null,act:null,act_src:null,pin_t:null,pin_kind:null,
+ prio:false,hold_commit:null,hold_typed:null,plan_t:null,plan_n:null,nostat:false,efc:null,ev:{}});
+const pyRound=x=>{const r=Math.round(x);return(Math.abs(x%1)===0.5&&r%2!==0)?r-1:r};
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const median=a=>{const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+
+/* ---- time and text ---- */
+function parseClock(s){s=String(s).replace(/:/g,"").trim();if(!/^\d+$/.test(s)||(s.length!==4&&s.length!==6))return NaN;
+ const h=+s.slice(0,2),m=+s.slice(2,4),x=s.length===6?+s.slice(4):0;return h>23||m>59||x>59?NaN:h*3600+m*60+x}
+function parseDur(s){s=String(s).trim();if(!s)return NaN;if(s.includes(":")){const[a,b]=s.split(":");return +a*60+ +b}return Math.round(parseFloat(s)*60)}
+const p2=n=>String(n).padStart(2,"0");
+const fc=s=>{s=Math.round(s)%86400;if(s<0)s+=86400;return p2(Math.floor(s/3600))+":"+p2(Math.floor(s%3600/60))+":"+p2(s%60)};
+const fd=s=>{s=Math.round(s);const g=s<0?"-":"";s=Math.abs(s);return g+Math.floor(s/60)+":"+p2(s%60)};
+const sg=s=>{const t=fd(s);return t[0]==="-"?t:"+"+t};
+const esc=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---- derived values ---- */
+const findAc=c=>S.acs.find(a=>a.call===c);
+const overhead=a=>a.ato2!=null?a.ato2:(a.ato!=null?a.ato:a.est);
+const baseRoute=f=>S.cfg.route[f]!=null?S.cfg.route[f]:(LEARNED[f]?LEARNED[f][0]:null);
+const route=f=>(S.cfg.learn&&LEARNED[f])?LEARNED[f][0]:S.cfg.route[f];
+const eta=a=>overhead(a)+route(a.fix);
+const eta0=a=>a.est0+route(a.fix);
+const circuit=a=>S.cfg.circuit[a.fix];
+const passedFix=a=>a.ato!=null||(S.now!=null&&overhead(a)<=S.now);
+const nohold=a=>!!a.ev.nohold;
+const noHold=a=>nohold(a)||a.ato2!=null||a.efc!=null;
+const gain=a=>(passedFix(a)||a.ev.nofast)?0:S.cfg.gain[a.fix];
+function inHold(a){const n=a.hold_commit;return!!n&&a.ato2==null&&a.act==null&&passedFix(a)}
+const overdue=a=>inHold(a)&&S.now!=null&&S.now>=overhead(a)+a.hold_commit*circuit(a)-1e-6;
+const absorb=a=>inHold(a)?0:S.cfg.absorb[a.fix];
+function holdMin(a){const n=a.hold_commit;if(!n||!passedFix(a)||noHold(a))return 0;if(S.now==null)return n;
+ return Math.max(1,Math.ceil((S.now-overhead(a))/circuit(a)-1e-9))}
+const sepNm=(l,f)=>S.cfg.sep[l][FOLLOW.indexOf(f==="J"?"H":f)];
+const sepMinS=(l,f)=>sepNm(l,f)/S.cfg.final_kt*3600;
+const sepPlanS=(l,f)=>sepMinS(l,f)+S.cfg.buffer;
+const sepS=(l,f)=>sepPlanS(l.cat,f.cat)+(l.ev.long||0);
+
+/* ---- planning ---- */
+function slotTime(a,req){const e=eta(a),g=gain(a),ab=absorb(a),c=circuit(a);
+ if(noHold(a))return Math.max(req,a.efc!=null?a.efc+route(a.fix):e-g);
+ const mn=holdMin(a);
+ if(mn>0){const d=Math.max(req-e,mn*c),n=Math.max(mn,Math.ceil((d-ab)/c-1e-9));return e+Math.max(d,n*c)}
+ const d=req-e;if(d<=ab)return Math.max(req,e-g);
+ const n=Math.ceil((d-ab)/c-1e-9);return e+Math.max(d,n*c)}
+function split(a,t){const delay=t-eta(a);
+ if(a.efc!=null){const held=Math.max(0,a.efc-overhead(a)),n=held>=1?Math.max(1,pyRound(held/circuit(a))):0;return[n,Math.max(0,delay-held)]}
+ if(noHold(a))return[0,Math.max(0,delay)];
+ const ab=absorb(a),c=circuit(a);let n=delay>ab+1e-6?Math.ceil((delay-ab)/c-1e-9):0;n=Math.max(n,holdMin(a));
+ return[n,Math.max(0,delay-n*c)]}
+function slotOf(a,t){const[n,r]=split(a,t),e=eta(a),ex=(a.efc!=null&&n)?a.efc:(n?overhead(a)+n*circuit(a):null);
+ if(inHold(a))return{t,n,vec:r,mode:"IN HOLD",text:(overdue(a)?"STILL IN HOLD ":"IN HOLD ")+Math.max(n,1)+"x",exit_t:ex};
+ if(t<e-FAST_MIN)return{t,n,vec:r,mode:"FAST",text:"FAST",exit_t:ex};
+ const p=[];if(n)p.push("HOLD "+n+"x");if(r>=1)p.push(noHold(a)&&r>S.cfg.absorb[a.fix]+1?"VEC+":"SLOW");
+ return{t,n,vec:r,mode:n?"HOLD":(r>=1?"SLOW":"-"),text:p.length?p.join("+"):"-",exit_t:ex}}
+function cost(a,t){const d=t-eta(a),cf=S.cfg;let c=d>=0?d:-d*ADV;
+ if(d>0){c+=d*holdMin(a)*0.5;if(cf.fair>0)c+=d*d/cf.fair}
+ if(noHold(a)&&a.efc==null&&d>cf.absorb[a.fix])c+=4*(d-cf.absorb[a.fix]);
+ if(a.ev.fuel!=null){if(d>a.ev.fuel)c+=20*(d-a.ev.fuel)}
+ else if(cf.max_hold>0&&!noHold(a)){const hm=holdMin(a),lim=hm>0?absorb(a)+hm*circuit(a):cf.absorb[a.fix]+cf.max_hold*circuit(a);if(d>lim)c+=20*(d-lim)}
+ return c}
+function fixedTime(a){if(a.prio)return eta(a);
+ if(a.pin_t!=null&&(a.pin_kind==="commit"||a.pin_t>=eta(a)-gain(a)-1e-6))return a.pin_t;return null}
+function place(a,prev,pt,usePins=true){const ft=usePins?fixedTime(a):null;let req;
+ if(!prev){if(ft!=null)return ft;req=eta(a)-gain(a)}
+ else{req=pt+sepS(prev,a);if(ft!=null)return req<=ft+1e-6?ft:null}
+ return slotTime(a,req)}
+function schedule(order,leader,usePins=true){const times=[];
+ order.forEach((a,i)=>{const prev=i?order[i-1]:leader,pt=i?times[i-1]:(leader?leader.act:null);
+  let t=place(a,prev,pt,usePins);if(t==null)t=slotTime(a,pt+sepS(prev,a));times.push(t)});
+ for(let i=order.length-1;i>=0;i--){const a=order[i];
+  if(times[i]<eta(a)-1e-6&&!(usePins&&fixedTime(a)!=null)){
+   const nw=i===order.length-1?eta(a):Math.min(eta(a),times[i+1]-sepS(a,order[i+1]));if(nw>times[i])times[i]=nw}}
+ return times}
+const fifoKey=(x,y)=>eta(x)-eta(y)||overhead(x)-overhead(y)||(x.call<y.call?-1:x.call>y.call?1:0);
+function prune(l){l.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);const k=[];let b=Infinity;for(const s of l)if(s[1]<b-1e-9){k.push(s);b=s[1]}return k}
+function mustPrecede(b,a,usePins){if(a.fix!==b.fix||Object.keys(a.ev).length||Object.keys(b.ev).length||a.prio||b.prio)return false;
+ if(usePins&&fixedTime(a)!=null)return false;
+ if(!(passedFix(a)&&passedFix(b))||inHold(b))return false;
+ return overhead(b)<overhead(a)||(overhead(b)===overhead(a)&&b.call<a.call)}
+function dp(free,leader,usePins,shift){const n=free.length;
+ const pred=free.map((a,j)=>{let m=0;for(let i=0;i<n;i++)if(i!==j&&mustPrecede(free[i],a,usePins))m|=1<<i;return m});
+ const fifo=[...free.keys()].sort((i,j)=>fifoKey(free[i],free[j]));const rank={};fifo.forEach((i,r)=>rank[i]=r);
+ const lt=leader?leader.act:null;
+ const allowed=(k,j)=>Object.keys(free[j].ev).length>0||(usePins&&fixedTime(free[j])!=null)||Math.abs(k-rank[j])<=shift;
+ let layer=new Map();
+ for(let i=0;i<n;i++){if(!allowed(0,i)||pred[i])continue;const t=place(free[i],leader,lt,usePins);if(t!=null)layer.set((1<<i)+","+i,[[t,cost(free[i],t),[i]]])}
+ for(let k=1;k<n;k++){const nw=new Map();
+  for(const[key,lst]of layer){const[mask,last]=key.split(",").map(Number);
+   for(let j=0;j<n;j++){if((mask&(1<<j))||!allowed(k,j)||(pred[j]&~mask))continue;
+    for(const[t,c,o]of lst){const nt=place(free[j],free[last],t,usePins);if(nt==null)continue;const k2=(mask|1<<j)+","+j;
+     if(!nw.has(k2))nw.set(k2,[]);nw.get(k2).push([nt,c+cost(free[j],nt),o.concat(j)])}}}
+  layer=new Map([...nw].map(([k,v])=>[k,prune(v)]));if(!layer.size)return null}
+ if(!layer.size)return null;
+ let best=null;for(const l of layer.values())for(const s of l)if(!best||s[1]<best[1]||(s[1]===best[1]&&s[0]<best[0]))best=s;
+ return best[2].map(i=>free[i])}
+function optimise(free,leader,shift){if(!free.length)return[[],false];
+ const r=dp(free,leader,true,shift);if(r)return[r,false];return[dp(free,leader,false,shift)||free.slice().sort(fifoKey),true]}
+function manualOrder(fe){const ix=c=>S.manual.indexOf(c);
+ return[...fe].sort((a,b)=>{const x=ix(a.call),y=ix(b.call);if(x<0&&y<0)return fifoKey(a,b);if(x<0)return 1;if(y<0)return-1;return x-y})}
+function makePlan(opt={}){const acs=opt.acs||S.acs;
+ const frozen=acs.filter(a=>a.act!=null).sort((x,y)=>x.act-y.act||(x.call<y.call?-1:1)),free=acs.filter(a=>a.act==null),
+  leader=frozen[frozen.length-1]||null;let order=opt.order,ignored=false;
+ if(!order){if(opt.manual&&S.manual)order=manualOrder(free);else[order,ignored]=optimise(free,leader,opt.shift==null?S.cfg.shift:opt.shift)}
+ const times=schedule(order,leader,!ignored),slots={};order.forEach((a,i)=>slots[a.call]=slotOf(a,times[i]));
+ return{frozen,order,times,ignored,slots,leader,seq:frozen.concat(order),tms:frozen.map(a=>a.act).concat(times)}}
+const plan=()=>makePlan({manual:true});
+const totalLoss=p=>p.order.reduce((x,a,i)=>x+Math.max(0,p.times[i]-eta(a)),0);
+function suggestion(p){const free=S.acs.filter(a=>a.act==null);if(free.length<2||free.length>11)return null;
+ const sp=makePlan({shift:Math.max(S.cfg.sugg_shift,S.cfg.shift)});if(sp.ignored&&!p.ignored)return null;
+ const cur=totalLoss(p),sug=totalLoss(sp);
+ if(sp.order.every((a,i)=>a===p.order[i])||sug>=cur-5)return null;sp.cur=cur;sp.sug=sug;return sp}
+
+/* ---- fixing, hold, now ---- */
+function commit(a,sl){a.hold_commit=sl.n;if(sl.n===0||(S.now!=null&&S.now>=overhead(a)+sl.n*circuit(a)-1e-6)){a.pin_t=sl.t;a.pin_kind="commit"}}
+function removeAcs(list,p){p=p||plan();for(const a of list){if(a.ato!=null&&!a.nostat)S.log.push(record(a,p));S.acs=S.acs.filter(x=>x!==a)}}
+function setNow(n){const p=plan();S.now=n;let msg="Sim time: "+fc(n)+".";const fixed=[];
+ for(const a of p.order)if(passedFix(a)){commit(a,p.slots[a.call]);fixed.push(a.call)}
+ const ps=p.seq.map((a,i)=>[p.tms[i],a]).filter(x=>x[0]<=n&&!inHold(x[1])).sort((x,y)=>x[0]-y[0]||(x[1].call<y[1].call?-1:1));
+ if(ps.length){const[tl,last]=ps[ps.length-1];
+  if(last.act==null){const sl=p.slots[last.call];last.act=tl;last.act_src="plan";last.pin_t=null;last.pin_kind=null;last.plan_n=sl?sl.n:null}
+  const gone=ps.slice(0,-1).map(x=>x[1]);removeAcs(gone,p);
+  if(gone.length)msg+=" Past the merge and deleted: "+gone.map(a=>a.call).join(", ")+".";
+  msg+=" "+last.call+" is past the merge ("+fc(tl)+") and stays as leader."}
+ const still=fixed.filter(c=>{const a=findAc(c);return a&&a.act==null});if(still.length)msg+=" Over the fix, hold fixed: "+still.join(", ")+".";
+ const od=S.acs.filter(overdue);if(od.length)msg+=" STILL IN HOLD (enter 2nd actual fix when they are out): "+od.map(a=>a.call).join(", ")+".";
+ if(S.manual)S.manual=S.manual.filter(c=>findAc(c));return msg}
+
+/* ---- holds, records, learned route ---- */
+function holdsOf(a,p){const c=circuit(a);
+ if(a.hold_typed!=null)return[a.hold_typed,"typed",true];
+ if(a.ato!=null&&a.ato2!=null)return[a.ato2>a.ato?Math.max(1,pyRound((a.ato2-a.ato)/c)):0,"ato2",true];
+ let planned=a.hold_commit;if(planned==null)planned=a.plan_n;
+ if(planned==null&&p&&p.slots[a.call])planned=p.slots[a.call].n;
+ if(a.ato!=null&&a.act!=null&&a.act_src==="user"){const r=baseRoute(a.fix);
+  if(r!=null){const x=a.act-a.ato-r,ab=S.cfg.absorb[a.fix],g=S.cfg.gain[a.fix],y=x-(ab+c-g)/2;let n,dist;
+   if(y<0){n=0;dist=-y}else{n=Math.floor(y/c)+1;dist=Math.min(y%c,c-y%c)}
+   const sure=dist>=SURE_S;if(sure||planned==null)return[n,"afgeleid",sure];return[planned,"plan",false]}}
+ return[planned||0,"plan",true]}
+function record(a,p){const[n,src,sure]=holdsOf(a,p);
+ return{call:a.call,cat:a.cat,fix:a.fix,est0:a.est0,ato:a.ato,ato2:a.ato2,act:(a.act!=null&&a.act_src==="user")?a.act:null,
+  plan:a.plan_t,n,src,sure,circuit:circuit(a),route:S.cfg.route[a.fix]}}
+const liveRecs=p=>S.acs.filter(a=>a.ato!=null&&!a.nostat).map(a=>record(a,p));
+function freeTime(r){if(r.act==null||r.ato==null)return null;if(r.ato2!=null)return r.act-r.ato2;if(r.sure===false)return null;return r.act-r.ato-r.n*r.circuit}
+function observed(recs){const o=Object.fromEntries(FX.map(f=>[f,[]]));for(const r of recs){const x=freeTime(r);if(x!=null&&x>0)o[r.fix].push(x)}return o}
+function refreshLearned(){LEARNED={};if(!S.cfg.learn)return;const o=observed(S.log.concat(liveRecs()));
+ for(const f of FX)if(o[f].length>=S.cfg.learn_min)LEARNED[f]=[mean(o[f]),o[f].length]}
+
+/* ---- statistics ---- */
+function computeScore(recs){const rs=recs.filter(r=>r.act!=null);if(!rs.length)return null;const tol=S.cfg.tol,cl=x=>Math.max(0,Math.min(100,x)),parts=[];
+ const acc=rs.filter(r=>r.plan!=null).map(r=>{const d=Math.abs(r.act-r.plan);return d<=tol?100:cl(100*(1-(d-tol)/(120-tol)))});
+ if(acc.length)parts.push(["Accuracy (actual vs planned)",mean(acc),30]);
+ const dl=rs.filter(r=>r.route!=null).map(r=>Math.max(0,r.act-(r.ato+r.route)));
+ if(dl.length){parts.push(["Efficiency (avg. loss)",cl(100*(1-mean(dl)/300)),25]);const mx=Math.max(...dl);
+  parts.push(["Fairness (max loss)",mx<=180?100:cl(100*(1-(mx-180)/420)),15])}
+ parts.push(["Few holds",100*(1-rs.filter(r=>r.n>0).length/rs.length),15]);
+ const so=rs.filter(r=>r.cat).sort((x,y)=>x.act-y.act),gp=[];let below=0;
+ for(let i=1;i<so.length;i++){const g=so[i].act-so[i-1].act,need=sepMinS(so[i-1].cat,so[i].cat);if(g<need-15)below++;
+  const ex=Math.max(0,g-need-S.cfg.buffer);gp.push(ex<=30?100:cl(100*(1-(ex-30)/150)))}
+ if(gp.length)parts.push(["Tight arrivals (few gaps)",mean(gp),15]);
+ const w=parts.reduce((x,p)=>x+p[2],0);return{parts,total:parts.reduce((x,p)=>x+p[1]*p[2],0)/w,below}}
+function computeStats(recs){const groups=[...FX.map(f=>[f,recs.filter(r=>r.fix===f)]),["ALL",recs]],o={n:recs.length,groups,tol:S.cfg.tol};
+ o.over_fix={};o.over_merge={};o.route={};
+ for(const[g,rs]of groups){o.over_fix[g]=rs.filter(r=>r.est0!=null).map(r=>r.ato-r.est0);
+  o.over_merge[g]=rs.filter(r=>r.act!=null&&r.plan!=null).map(r=>r.act-r.plan);
+  o.route[g]=rs.map(r=>{const x=freeTime(r);return x!=null&&x>0?[x,r.route!=null?x-r.route:null]:null}).filter(Boolean)}
+ o.held=recs.filter(r=>r.n>0).map(r=>r.n);o.unsure=recs.filter(r=>r.act!=null&&r.sure===false).length;o.no_act=recs.filter(r=>r.act==null).length;
+ o.score=computeScore(recs);return o}
+
+/* ---- events ---- */
+const logEv=t=>{S.events.push((S.now!=null?fc(S.now):"--:--:--")+"  "+t);if(S.events.length>30)S.events.shift()};
+function evText(a,k){return{fuel:`FUEL: ${a.call} reports low fuel, maximum ${fd(a.ev.fuel||0)} delay.`,med:`MEDICAL: ${a.call} reports a medical emergency and asks for priority (PRIO).`,
+ long:`TECHNICAL: ${a.call} needs a longer final, +${a.ev.long}s separation behind it.`,nohold:`TECHNICAL: ${a.call} is UNABLE HOLD.`,nofast:`TECHNICAL: ${a.call} is UNABLE to fly faster.`}[k]}
+function setEvent(a,k,v){if(k==="fuel")a.ev.fuel=v;else if(k==="med"){a.ev.med=true;a.prio=true}else if(k==="long")a.ev.long=v;
+ else if(k==="nohold"){a.ev.nohold=true;a.hold_commit=null;a.pin_t=null;a.pin_kind=null}else if(k==="nofast")a.ev.nofast=true;
+ const t=evText(a,k);logEv(t);return t}
+const pick=l=>l[Math.floor(Math.random()*l.length)];
+function randomEvent(){const c=S.acs.filter(a=>a.act==null&&!Object.keys(a.ev).length&&!inHold(a));if(!c.length)return"";
+ const a=pick(c),r=Math.random();
+ if(r<.35)return setEvent(a,"fuel",pick([180,240,300,360,480,600]));
+ if(r<.55)return setEvent(a,"med");
+ const k=pick(["long","long","nohold","nofast"]);return setEvent(a,k,k==="long"?pick([60,90,120,180]):undefined)}
+let rcount=0;function tick(){const c=S.cfg;if(!c.rand_on)return;rcount++;if(rcount>=c.rand_every){rcount=0;if(Math.random()<c.rand_prob)randomEvent()}}
+
+/* ---- storage, migration ---- */
+function migrate(o){ // old web state (v1) to v2
+ const s=defState(),f=o.fx||{};for(const x of FX)if(f[x]){s.cfg.route[x]=f[x].r;s.cfg.absorb[x]=f[x].a;s.cfg.gain[x]=f[x].g;s.cfg.circuit[x]=f[x].c}
+ Object.assign(s.cfg,{buffer:o.buf??20,shift:o.shift??1,final_kt:o.spd??160,sugg_shift:o.sshift??10,max_hold:o.maxhold??2,fair:o.fair??600,learn:o.learn!==false,learn_min:o.lmin||1});
+ if(o.rnd)Object.assign(s.cfg,{rand_on:!!o.rnd.on,rand_every:o.rnd.every||6,rand_prob:(o.rnd.p??60)/100});
+ s.now=o.now??null;s.manual=o.manual||null;s.events=o.evlog||[];
+ s.log=(o.log||[]).map(r=>({call:null,cat:r.cat,fix:r.fix,est0:r.est0,ato:r.ato,ato2:r.a2??null,act:r.act,plan:r.pt??null,n:r.n||0,src:"plan",sure:true,circuit:r.c||360,route:r.r??null}));
+ s.acs=(o.ac||[]).map(a=>Object.assign(mkAc(a.call,a.cat,a.fix,a.t),{est0:a.est0??a.t,ato:a.ato??null,ato2:a.ato2??null,act:a.act??null,
+  act_src:a.act!=null?(a.auto?"plan":"user"):null,prio:!!a.prio,hold_typed:a.hn??null,plan_t:a.pt??null,nostat:!!a.ns,ev:a.ev||{}}));
+ return s}
+function loadState(raw){try{const o=JSON.parse(raw);if(o&&o.cfg&&o.acs){const d=defState(),s=Object.assign(d,o);s.cfg=Object.assign(defCfg(),o.cfg);return s}if(o&&o.fx)return migrate(o)}catch(e){}return null}
+
+/* ===== UI ===== */
+const $=id=>document.getElementById(id);
+const H=[];let LAST="",CUR=null;
+const save=()=>{const c=JSON.stringify(S);if(c!==LAST){if(LAST)H.push(LAST);if(H.length>50)H.shift();LAST=c}try{localStorage.setItem(KEY,c)}catch(e){}};
+(()=>{let raw=null;try{raw=localStorage.getItem(KEY)}catch(e){}
+ let s=raw&&loadState(raw);if(!s){try{const old=localStorage.getItem(OLDKEY);s=old&&loadState(old)}catch(e){}}
+ if(s)S=s;LAST=JSON.stringify(S)})();
+const say=t=>{$("msg").textContent=t||""};
+const SRC={typed:"typed",ato2:"ato2",afgeleid:"deriv",plan:"plan"};
+
+/* ---- actions on aircraft (same rules as the Python commands) ---- */
+function addAircraft(call,cat,fix,t){const o=findAc(call);
+ if(o){Object.assign(o,{cat,fix,est:t,est0:t,ato:null,ato2:null,hold_commit:null,hold_typed:null,pin_t:null,pin_kind:null});return call+" updated."}
+ S.acs.push(mkAc(call,cat,fix,t));return call+" added."}
+/* ---- check for illogical times (pop-up) ---- */
+const CHK={early:600,late:900,minHold:120,fast:0.6};
+function timeIssues(a,kind,t){const out=[],r=route(a.fix);
+ if(kind==="ato"){if(t<a.est0-CHK.early)out.push(`ato ${fc(t)} is ${fd(a.est0-t)} earlier than the first ETA (${fc(a.est0)}).`);
+  if(t>a.est0+CHK.late)out.push(`ato ${fc(t)} is ${fd(t-a.est0)} later than the first ETA (${fc(a.est0)}).`)}
+ else if(kind==="ato2"&&a.ato!=null&&t-a.ato<CHK.minHold)out.push(`Only ${fd(t-a.ato)} after the first ato (${fc(a.ato)}): that is not a hold.`);
+ if((kind==="ato"||kind==="ato2")&&a.act!=null&&t>=a.act)out.push(`${fc(t)} is not earlier than the act (${fc(a.act)}).`);
+ if(kind==="act"){const ref=a.ato2!=null?a.ato2:a.ato;
+  if(ref!=null){const x=t-ref;if(x<=0)out.push(`act ${fc(t)} is not later than the ato (${fc(ref)}).`);
+   else if(r!=null&&x<CHK.fast*r)out.push(`${fd(x)} from fix to merge is much too fast (route ${fd(r)}).`)}
+  const o=S.acs.filter(b=>b!==a&&b.act!=null);
+  const pv=o.filter(b=>b.act<=t).sort((x,y)=>y.act-x.act)[0];
+  if(pv){const need=sepMinS(pv.cat,a.cat);if(t-pv.act<need-15)out.push(`Only ${Math.round(t-pv.act)}s after ${pv.call} (${pv.cat}): minimum is ${Math.round(need)}s (${sepNm(pv.cat,a.cat)} nm).`)}
+  const nx=o.filter(b=>b.act>t).sort((x,y)=>x.act-y.act)[0];
+  if(nx){const need=sepMinS(a.cat,nx.cat);if(nx.act-t<need-15)out.push(`${nx.call} (${nx.cat}) follows only ${Math.round(nx.act-t)}s later: minimum is ${Math.round(need)}s.`)}}
+ return out}
+/* 'j' = save anyway, 'x' = save but exclude from statistics, 'n' = cancel */
+let CONFIRM=(a,issues)=>{
+ if(confirm(`⚠ ILLOGICAL TIME for ${a.call}\n\n- ${issues.join("\n- ")}\n\nOK = save anyway\nCancel = do not save (or exclude from statistics)`))return"j";
+ return confirm(`${a.call}: save, but EXCLUDE from statistics (no stat)?\n\nOK = save without statistics\nCancel = save nothing`)?"x":"n"};
+function checkTime(a,kind,t){const is=timeIssues(a,kind,t);if(!is.length)return{ok:true,warn:"",ns:false};
+ const r=CONFIRM(a,is);if(r==="n")return{ok:false,warn:"Not saved.",ns:false};
+ return r==="x"?{ok:true,warn:" Excluded from statistics (no stat).",ns:true}:{ok:true,warn:" (illogical time saved anyway)",ns:false}}
+function doAto(call,val){const a=findAc(call),t=parseClock(val);if(!a)return"";if(isNaN(t))return"Time: use HH:MM or HH:MM:SS";
+ if(a.ato!=null&&t<=a.ato)return`The 2nd ato must be later than the first (${fc(a.ato)}).`;
+ const ck=checkTime(a,a.ato==null?"ato":"ato2",t);if(!ck.ok)return ck.warn;if(ck.ns)a.nostat=true;
+ if(a.ato==null){a.ato=t;a.hold_commit=null;a.pin_t=null;a.pin_kind=null;let m=`${a.call} over the fix ${fc(t)} (first ETA ${fc(a.est0)}, ${sg(t-a.est0)}).${ck.warn}`;
+  if(a.act==null){const sl=plan().slots[a.call];if(sl){commit(a,sl);m+=" Fixed: "+(sl.n?"hold "+sl.n+"x":"no hold")+"."}}return m}
+ a.ato2=t;a.pin_t=null;a.pin_kind=null;const[n]=holdsOf(a);
+ if(a.act==null){const sl=plan().slots[a.call];if(sl){a.pin_t=sl.t;a.pin_kind="commit"}}
+ return`${a.call} out of the hold ${fc(t)}: ${n} circuit(s), ${fd(t-a.ato)} in hold (first ETA ${fc(a.est0)}, first ato ${fc(a.ato)}).${ck.warn}`}
+function doAct(call,val){const a=findAc(call),t=parseClock(val);if(!a)return"";if(isNaN(t))return"Actual merge time: use HH:MM or HH:MM:SS";
+ const ck=checkTime(a,"act",t);if(!ck.ok)return ck.warn;
+ const p=plan(),sl=p.slots[a.call];if(sl){a.plan_t=sl.t;a.plan_n=sl.n}
+ if(ck.ns)a.nostat=true;
+ a.act=t;a.act_src="user";a.pin_t=null;a.pin_kind=null;
+ if(a.ato==null)return`${a.call} actual over merge: ${fc(t)}.${ck.warn}`;
+ const[n,src,sure]=holdsOf(a,p);return`${a.call} actual over merge: ${fc(t)}.${ck.warn} Holds: ${n} (${SRC[src]}${sure?"":", uncertain: type the number in Holds"}).`}
+const toggleLock=a=>{if(a.pin_t!=null){a.pin_t=null;a.pin_kind=null}else{const sl=plan().slots[a.call];if(sl){a.pin_t=sl.t;a.pin_kind="lock"}}};
+function adopt(sug){for(const[i,a]of sug.order.entries())if(a.pin_kind!=="commit"){a.pin_t=sug.times[i];a.pin_kind="lock"}S.manual=null}
+function reorder(from,to){const cur=CUR.order.map(a=>a.call),i=cur.indexOf(from),j=cur.indexOf(to);if(i<0||j<0)return;cur.splice(i,1);cur.splice(j,0,from);S.manual=cur}
+
+/* ---- text per aircraft ---- */
+function tags(a,P){const e=a.ev,t=[];
+ if(e.fuel!=null)t.push(["HOLD","FUEL ≤"+fd(e.fuel)]);if(e.med)t.push(["HOLD","MED"]);if(e.long)t.push(["SLOW","LONG +"+e.long+"s"]);
+ if(e.nohold)t.push(["SLOW","NO HOLD"]);if(e.nofast)t.push(["SLOW","NO FAST"]);
+ if(a.prio&&!e.med)t.push(["HOLD","PRIO"]);
+ if(a.act==null&&!P.ignored&&!a.prio&&fixedTime(a)!=null)t.push(["ACT",a.pin_kind==="commit"?"COMMIT":"LOCK"]);
+ if(a.nostat)t.push(["SLOW","NO STAT"]);
+ return t.map(x=>`<span class="tag ${x[0]}">${x[1]}</span>`).join(" ")}
+function sugCell(P,sug,a,i){if(!sug)return"";const j=sug.order.indexOf(a);if(j<0)return"";const dt=sug.times[j]-P.times[i];
+ if(j===i&&Math.abs(dt)<5)return"=";return(j!==i?"#"+(P.frozen.length+j+1)+" ":"= ")+sg(dt)}
+
+function renderTable(P,sug){const nfr=P.frozen.length,seq=P.seq,tm=P.tms;
+ if(!seq.length){$("tbl").innerHTML='<div style="color:var(--mut)">No aircraft yet.</div>';return}
+ let h='<table><tr><th></th><th>#</th><th>Callsign</th><th>Cat</th><th>Fix</th><th title="First estimated time over the fix at the first call: the reference for everything">1st ETA</th><th>Over fix</th><th>ETA merge</th><th>Merge</th><th class="r">Loss</th><th class="r" title="Total delay compared to the first ETA (at the first call)">Total loss</th><th>Action</th><th>EFC</th><th class="r">Gap</th><th>Suggestion</th><th>Actual fix</th><th>Actual merge</th><th>Holds</th><th>Event</th><th></th></tr>';
+ seq.forEach((a,i)=>{const t=tm[i],isA=i<nfr,c=esc(a.call),gap=i?Math.round(t-tm[i-1])+"s":"-",sl=isA?null:P.slots[a.call];
+  const act=isA?(a.act_src==="user"&&a.plan_t!=null?"ACT plan "+sg(a.act-a.plan_t):"ACT"):sl.text;
+  const cl=isA?"ACT":(sl.mode==="IN HOLD"?"HOLD":sl.mode==="HOLD"||sl.mode==="HOLD+SLOW"?"HOLD":sl.mode);
+  const mark=a.ato2!=null?"H":(a.ato!=null?"A":"");
+  const atoTxt=a.ato!=null?`<span title="first ato${a.ato2!=null?" / out of hold":""}">${fc(a.ato)}${a.ato2!=null?" / "+fc(a.ato2):""}</span> <button class="g" data-a="${a.ato2!=null?"cato2":"cato"}" data-c="${c}">clear</button> `:"";
+  const atoCell=atoTxt+(isA?"":`<input placeholder="${a.ato==null?"14:00:20":"over fix again"}" data-in="ato" data-c="${c}"> <button data-a="ato" data-c="${c}">ato</button>`);
+  const actCell=isA?`${a.act_src==="user"?fc(a.act):"(plan)"} <button class="g" data-a="cact" data-c="${c}">clear</button>`:`<input placeholder="14:12:30" data-in="act" data-c="${c}"> <button data-a="act" data-c="${c}">act</button>`;
+  const[hn,src,sure]=holdsOf(a,P);
+  const holdCell=`<input data-in="hold" data-c="${c}" style="width:50px" value="${a.hold_typed!=null?a.hold_typed:""}" placeholder="${hn}" title="Empty = automatic (${SRC[src]}). Type the real number of circuits to correct it."> <span style="color:var(--mut);font-size:12px">${a.hold_typed!=null?"typed":SRC[src]}${sure?"":" ?"}</span>`;
+  const efcCell=isA?"":`<input data-in="efc" data-c="${c}" style="width:86px" value="${a.efc!=null?fc(a.efc):""}" placeholder="${sl.exit_t!=null?fc(sl.exit_t):"-"}" title="EFC = expected release from the hold. Empty = automatic (EAT from the plan). Type a time to override.">${a.efc!=null?" ✎":""}`;
+  h+=`<tr class="${isA?"act":""}" ${isA?"":`data-row="${c}"`}><td class="h" ${isA?"":`data-drag="${c}"`}>${isA?"":"⠿"}</td><td>${i+1}</td><td><b>${c}</b></td><td>${a.cat}</td><td>${a.fix}</td><td><b>${fc(a.est0)}</b></td><td>${fc(overhead(a))}${mark}</td><td>${fc(eta(a))}</td><td>${fc(t)}</td><td class="r">${fd(t-eta(a))}</td><td class="r">${fd(t-eta0(a))}</td><td>${act==="-"?"-":`<span class="tag ${cl}">${act}</span>`}</td><td>${efcCell}</td><td class="r">${gap}</td><td>${isA?"":sugCell(P,sug,a,i-nfr)}</td><td>${atoCell}</td><td>${actCell}</td><td>${holdCell}</td><td>${tags(a,P)}${isA?"":` <button class="g" data-a="nohold" data-c="${c}">${nohold(a)?"hold ok":"unable hold"}</button> <button class="g" data-a="lock" data-c="${c}">${a.pin_t!=null?"unlock":"lock"}</button>`} ${a.ato!=null&&a.ato2==null&&!isA?`<button class="g" data-a="inhold" data-c="${c}" title="Put in the hold; stays in it until you enter the 2nd actual fix time">${a.hold_commit?"in hold ✓":"in hold"}</button>`:""} <button class="g" data-a="prio" data-c="${c}">${a.prio?"PRIO ✓":"prio"}</button> <button class="g" data-a="nostat" data-c="${c}" title="Exclude from statistics, score and learned routes">${a.nostat?"NO STAT ✓":"no stat"}</button></td><td><button class="g" data-a="del" data-c="${c}">×</button></td></tr>`});
+ $("tbl").innerHTML=h+"</table>"}
+
+function renderSummary(P,sug){const dl=P.times.map((t,i)=>Math.max(0,t-eta(P.order[i]))),tot=dl.reduce((x,y)=>x+y,0),holds=P.order.filter(a=>P.slots[a.call].n>0).length,tm=P.tms;
+ let s=`<span>Total delay <b>${fd(tot)}</b></span><span>Max per aircraft <b>${fd(dl.length?Math.max(...dl):0)}</b></span><span>In hold <b>${holds}</b></span>`;
+ if(P.seq.length>1&&tm[tm.length-1]>tm[0])s+=`<span>Arrival rate <b>${Math.round((P.seq.length-1)/(tm[tm.length-1]-tm[0])*3600)}/hour</b></span>`;
+ $("sum").innerHTML=s;
+ if(sug){let h=`<b>Suggestion (optimal, max shift ${Math.max(S.cfg.sugg_shift,S.cfg.shift)})</b> <button data-a="adopt">Adopt</button><br>Total delay: now ${fd(sug.cur)} → suggestion ${fd(sug.sug)} (gain ${fd(sug.cur-sug.sug)}). Your current order stays unchanged.<br>Order: ${sug.order.map(a=>esc(a.call)).join(" › ")}`;
+  sug.order.forEach((a,k)=>{const cur=P.order.indexOf(a),dt=sug.times[k]-P.times[cur];if(Math.abs(dt)<5)return;const sl=sug.slots[a.call];
+   h+=`<br>${esc(a.call)}: ${sl.mode==="IN HOLD"?"out of hold at "+fc(sl.exit_t)+", merge "+fc(sug.times[k]):sl.text+" → merge "+fc(sug.times[k])} (${sg(dt)} compared to now)`});
+  $("sug").innerHTML=h}else $("sug").innerHTML="";
+ const w=[];P.order.forEach((a,i)=>{const d=P.times[i]-eta(a),sl=P.slots[a.call],c=esc(a.call);
+  if(a.ev.fuel!=null&&d>a.ev.fuel+1)w.push(`FUEL: ${c} gets ${fd(d)} delay, maximum ${fd(a.ev.fuel)}. Give priority (prio) or increase shift.`);
+  if(nohold(a)&&d>S.cfg.absorb[a.fix]+1)w.push(`${c} cannot hold and must take ${fd(d-S.cfg.absorb[a.fix])} more vectors than the extra of ${fd(S.cfg.absorb[a.fix])}.`);
+  if(S.cfg.max_hold&&sl.n>S.cfg.max_hold&&a.ev.fuel==null)w.push(`${c} gets ${sl.n} holds (max ${S.cfg.max_hold}). Set prio or increase shift / max holds.`)});
+ P.frozen.forEach((a,i)=>{if(!i)return;const prev=P.frozen[i-1],g=a.act-prev.act,need=sepNm(prev.cat,a.cat),got=g*S.cfg.final_kt/3600;
+  if(got<need-0.05)w.push(`${esc(a.call)} behind ${esc(prev.call)}: ${got.toFixed(1)} nm (${Math.round(g)}s), minimum ${need} nm`)});
+ if(P.ignored)w.push("Not all locks/prio could be kept, so they are ignored for the moment.");
+ $("warn").innerHTML=w.map(x=>`<span>⚠ ${x}</span>`).join("")}
+
+function renderSpace(P){const seq=P.seq,tm=P.tms,nfr=P.frozen.length;let sp="";
+ if(seq.length){let g=0,rows="";
+  for(let i=Math.max(nfr-1,0);i<seq.length-1;i++){const a=seq[i],b=seq[i+1],gap=tm[i+1]-tm[i];
+   const f=CATS.filter(x=>gap+1e-6>=sepPlanS(a.cat,x)+sepPlanS(x,b.cat)+(a.ev.long||0));
+   if(f.length){g++;rows+=`<div>Between #${i+1} ${esc(a.call)} and #${i+2} ${esc(b.call)}: gap ${Math.round(gap)}s, still fits: ${f.join(", ")}</div>`}}
+  const l=seq[seq.length-1],tl=tm[tm.length-1];
+  sp=`<div><b>${g?g+" gap(s) where one more aircraft fits":"No gaps, the sequence is full"}</b></div>${rows}<div style="margin-top:6px">Behind #${seq.length} ${esc(l.call)} free from: ${["H","M","L"].map(x=>x+" "+fc(tl+sepPlanS(l.cat,x))).join(" | ")}</div>`;
+  const fs=P.order.filter(a=>P.slots[a.call].mode==="FAST");
+  if(fs.length)sp+=`<div style="margin-top:6px;color:var(--fast)">Flying faster helps the aircraft behind: ${fs.map(a=>esc(a.call)+" ("+fd(eta(a)-P.slots[a.call].t)+" earlier)").join(", ")}</div>`}
+ $("space").innerHTML=sp||'<span style="color:var(--mut)">-</span>';
+ const t=P.tms;if(seq.length>1){const t0=Math.min(...t),t1=Math.max(...t);let st=30;while((t1-t0)/st>70)st+=30;
+  const ln=Array(Math.round((t1-t0)/st)+1).fill(".");seq.forEach((a,i)=>ln[Math.round((t[i]-t0)/st)]=i<nfr?a.cat.toLowerCase():a.cat);
+  $("tl").textContent=ln.join("")+"\n"+fc(t0)+" -> "+fc(t1)+"   (1 character = "+st+"s, small letter = actual)"}else $("tl").textContent=""}
+
+function renderStats(P){const recs=S.log.concat(liveRecs(P));
+ if(!recs.length){$("stats").innerHTML='<span style="color:var(--mut)">No actual times over the fix yet (enter "ato").</span>';return}
+ const st=computeStats(recs),tol=st.tol,R=x=>`<td class="r">${x}</td>`;
+ const hdr=t=>`<tr><th>${t}</th><th class="r">n</th><th class="r">Avg</th><th class="r">Median</th><th class="r">Min</th><th class="r">Max</th><th class="r">Early</th><th class="r">On time</th><th class="r">Late</th></tr>`;
+ const tbl=(t,data)=>{let h='<table style="margin-bottom:10px">'+hdr(t),any=false;
+  for(const[g]of st.groups){const d=data[g];if(!d.length)continue;any=true;const e=d.filter(x=>x<-tol).length,l=d.filter(x=>x>tol).length;
+   h+=`<tr><td>${g}</td>${R(d.length)}${R(sg(mean(d)))}${R(sg(median(d)))}${R(sg(Math.min(...d)))}${R(sg(Math.max(...d)))}${R(e)}${R(d.length-e-l)}${R(l)}</tr>`}
+  return any?h+"</table>":""};
+ let h=tbl("Over the fix: actual − first ETA",st.over_fix)+tbl("Over the merge: actual − planned",st.over_merge);
+ let rt='<table style="margin-bottom:10px"><tr><th>Fix to merge without hold</th><th class="r">n</th><th class="r">Avg</th><th class="r">Median</th><th class="r">Min</th><th class="r">Max</th><th class="r">Set</th><th class="r">Avg extra</th><th class="r">Max extra</th></tr>',rows=0;
+ for(const[g]of st.groups){const fl=st.route[g];if(!fl.length)continue;rows++;const xs=fl.map(x=>x[0]),ex=fl.map(x=>x[1]).filter(x=>x!=null);
+  rt+=`<tr><td>${g}</td>${R(xs.length)}${R(fd(mean(xs)))}${R(fd(median(xs)))}${R(fd(Math.min(...xs)))}${R(fd(Math.max(...xs)))}${R(g==="ALL"?"-":fd(S.cfg.route[g]))}${R(ex.length?sg(mean(ex)):"-")}${R(ex.length?sg(Math.max(...ex)):"-")}</tr>`}
+ if(rows)h+=rt+"</table>";
+ const sc=st.score;
+ h=(sc?`<div class="sum" style="font-size:15px"><span>Score <b style="font-size:22px">${Math.round(sc.total)}</b>/100</span>${sc.parts.map(p=>`<span>${p[0].split(" (")[0]} <b>${Math.round(p[1])}</b></span>`).join("")}</div><div class="sum" style="margin-bottom:10px">Counts aircraft with ato and act. On time = within ${tol} s of planned.${sc.below?" Info: "+sc.below+" gap(s) smaller than the separation, not scored.":""}</div>`
+  :'<div class="sum">Score: no aircraft with ato and act yet.</div>')+h;
+ const notes=[];if(st.no_act)notes.push(st.no_act+" without act (only 'over the fix' counts)");
+ if(st.unsure)notes.push(st.unsure+" with uncertain number of holds (?) are not used in the route; type the number in Holds to confirm");
+ $("stats").innerHTML=h+`<div style="font-size:13px;color:var(--mut);margin-top:8px">In hold: <b>${st.held.length}</b> of ${st.n}${st.held.length?", average "+mean(st.held).toFixed(1)+" circuits":""}. Hold source: typed = by you, ato2 = measured from the hold, deriv = derived from act − ato − route, plan = the plan.${notes.length?" Not counted: "+notes.join("; ")+".":""}</div>`}
+
+function render(){refreshLearned();const P=plan();CUR=P;const sug=suggestion(P);
+ renderTable(P,sug);renderSummary(P,sug);renderSpace(P);renderStats(P);
+ {const cur=$("evac").value;$("evac").innerHTML=S.acs.filter(a=>a.act==null).map(a=>`<option>${esc(a.call)}</option>`).join("");if([...$("evac").options].some(o=>o.value===cur))$("evac").value=cur}
+ const c=S.cfg;$("rnd").value=c.rand_on?"1":"0";$("rne").value=c.rand_every;$("rnp").value=Math.round(c.rand_prob*100);
+ $("evlog").innerHTML=S.events.length?S.events.slice(-8).reverse().map(x=>"<div>"+esc(x)+"</div>").join(""):"No events yet.";
+ $("nowinfo").textContent=S.now!=null?"Sim time: "+fc(S.now):"";
+ $("buf").value=c.buffer;$("shift").value=c.shift;$("sshift").value=c.sugg_shift;$("maxhold").value=c.max_hold;$("fair").value=c.fair;$("spd").value=c.final_kt;
+ $("lrnon").value=c.learn?"1":"0";$("lmin").value=c.learn_min;
+ $("lrn").innerHTML="<span>Route used: "+FX.map(f=>f+" <b>"+fd(route(f))+"</b> ("+(c.learn&&LEARNED[f]?"avg., n="+LEARNED[f][1]:"set")+")").join(" | ")+"</span>";
+ $("mode").textContent=S.manual?"Manual order (drag the handle)":"Automatic (drag the handle to set it yourself)"}
+
+function renderFx(){const c=S.cfg;
+ $("fxs").innerHTML=FX.map(f=>`<div class="card"><b>${f}</b><div class="row" style="margin-top:6px">
+ <label>Route (set)<input data-f="${f}" data-k="route" value="${fd(c.route[f])}"></label>
+ <label>+Extra<input data-f="${f}" data-k="absorb" value="${fd(c.absorb[f])}"></label>
+ <label>-Faster<input data-f="${f}" data-k="gain" value="${fd(c.gain[f])}"></label>
+ <label>Hold<input data-f="${f}" data-k="circuit" value="${fd(c.circuit[f])}"></label></div></div>`).join("")}
+
+/* ---- events and controls ---- */
+const commitUI=(msg)=>{say(msg);save();render()};
+document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const k=b.dataset.a,c=b.dataset.c,a=c?findAc(c):null,inp=n=>{const i=document.querySelector(`input[data-in="${n}"][data-c="${CSS.escape(c)}"]`);return i?i.value:""};
+ if(k==="adopt"){const s=suggestion(plan());if(s){adopt(s);commitUI("Suggestion adopted: merge times fixed (LOCK). Auto order releases them again.")}return}
+ if(!a)return;
+ if(k==="ato"){const m=doAto(c,inp("ato"));tick();return commitUI(m)}
+ if(k==="ato2"){const m=doAto(c,inp("ato2"));tick();return commitUI(m)}
+ if(k==="cato"){a.est=a.est0!=null?a.est0:a.est;a.ato=null;a.ato2=null;a.hold_commit=null;a.pin_t=null;a.pin_kind=null;return commitUI("")}
+ if(k==="cato2"){a.ato2=null;a.pin_t=null;a.pin_kind=null;return commitUI("")}
+ if(k==="act"){const m=doAct(c,inp("act"));tick();return commitUI(m)}
+ if(k==="cact"){a.act=null;a.act_src=null;return commitUI("")}
+ if(k==="del"){removeAcs([a]);if(S.manual)S.manual=S.manual.filter(x=>x!==c);return commitUI("")}
+ if(k==="prio"){a.prio=!a.prio;logEv(a.call+(a.prio?": PRIO on.":": PRIO off."));return commitUI("")}
+ if(k==="nostat"){a.nostat=!a.nostat;return commitUI("")}
+ if(k==="inhold"){if(a.hold_commit){a.hold_commit=null;a.pin_t=null;a.pin_kind=null}else{a.hold_commit=1;a.pin_t=null;a.pin_kind=null}return commitUI("")}
+ if(k==="lock"){toggleLock(a);return commitUI("")}
+ if(k==="nohold"){if(a.ev.nohold){delete a.ev.nohold;logEv(a.call+" can hold again.")}else setEvent(a,"nohold");return commitUI("")}});
+document.addEventListener("change",e=>{const i=e.target;if(i.dataset.in==="efc"){const a=findAc(i.dataset.c);if(!a)return;const v=i.value.trim();
+ if(v===""||v==="-"){a.efc=null;return commitUI("")}const t=parseClock(v);if(isNaN(t)){say("EFC: use HH:MM or HH:MM:SS");return render()}
+ a.efc=t;a.pin_t=null;a.pin_kind=null;return commitUI(`${a.call}: EFC ${fc(t)} (manual). Earliest merge: ${fc(t+route(a.fix))}.`)}
+ if(i.dataset.in==="hold"){const a=findAc(i.dataset.c);if(!a)return;const v=i.value.trim(),n=parseInt(v);
+ a.hold_typed=(v===""||v==="-"||isNaN(n))?null:Math.max(0,n);commitUI("")}});
+
+$("fix").innerHTML=FX.map(f=>`<option>${f}</option>`).join("");
+$("add").onclick=()=>{const call=$("call").value.trim().toUpperCase(),t=parseClock($("t").value);
+ if(!call)return say("Enter a callsign");if(isNaN(t))return say("Time: use HH:MM or HH:MM:SS");
+ const m=addAircraft(call,$("cat").value,$("fix").value,t);$("call").value="";$("t").value="";tick();commitUI(m);$("call").focus()};
+$("setnow").onclick=()=>{const n=parseClock($("now").value);if(isNaN(n))return say("Sim time: use HH:MM or HH:MM:SS");refreshLearned();const m=setNow(n);$("now").value="";commitUI(m)};
+$("clrnow").onclick=()=>{S.now=null;commitUI("")};
+$("auto").onclick=()=>{S.manual=null;for(const a of S.acs)if(a.pin_kind==="lock"){a.pin_t=null;a.pin_kind=null}commitUI("")};
+$("undo").onclick=()=>{if(!H.length)return;S=loadState(H.pop());LAST=JSON.stringify(S);try{localStorage.setItem(KEY,LAST)}catch(e){}renderFx();render()};
+$("reset").onclick=()=>{if(confirm("Clear all aircraft and settings?")){S=defState();save();renderFx();commitUI("")}};
+$("evset").onclick=()=>{const a=findAc($("evac").value);if(!a)return;const k=$("evk").value;let v=$("evv").value;
+ if(k==="clear"){a.ev={};a.prio=false;logEv(a.call+": events cleared.");return commitUI("")}
+ if(k==="fuel"){v=parseDur(v);if(isNaN(v)||v<=0)return say("Fuel: enter the maximum delay in minutes (e.g. 6)")}
+ else if(k==="long"){v=v.trim()?parseFloat(v):90;if(isNaN(v)||v<=0)return say("Long final: enter seconds (e.g. 90)")}
+ setEvent(a,k,v);commitUI("")};
+$("rnow").onclick=()=>commitUI(randomEvent()?"":"No suitable aircraft (without event, not in hold).");
+const cfgInput=(id,key,conv,ok)=>{$(id).onchange=()=>{const v=conv($(id).value);if(!isNaN(v)&&ok(v)){S.cfg[key]=v;save()}render()}};
+cfgInput("buf","buffer",parseFloat,v=>v>=0);cfgInput("shift","shift",x=>Math.round(parseFloat(x)),v=>v>=0);cfgInput("sshift","sugg_shift",x=>Math.round(parseFloat(x)),v=>v>=0);
+cfgInput("maxhold","max_hold",x=>Math.round(parseFloat(x)),v=>v>=0);cfgInput("fair","fair",x=>Math.round(parseFloat(x)),v=>v>=0);cfgInput("spd","final_kt",parseFloat,v=>v>0);
+cfgInput("lmin","learn_min",x=>parseInt(x),v=>v>=1);cfgInput("rne","rand_every",x=>parseInt(x),v=>v>=1);cfgInput("rnp","rand_prob",x=>parseFloat(x)/100,v=>v>=0&&v<=1);
+$("lrnon").onchange=()=>{S.cfg.learn=$("lrnon").value==="1";save();render()};$("rnd").onchange=()=>{S.cfg.rand_on=$("rnd").value==="1";save();render()};
+document.addEventListener("change",e=>{const i=e.target;if(!i.dataset.f)return;const v=parseDur(i.value),k=i.dataset.k;
+ if(isNaN(v)||v<0||(k==="circuit"&&v<=0)){renderFx();return}S.cfg[k][i.dataset.f]=v;save();renderFx();render()});
+
+/* ---- dragging ---- */
+let drag=null;
+document.addEventListener("pointerdown",e=>{const h=e.target.closest("[data-drag]");if(!h)return;e.preventDefault();drag={c:h.dataset.drag,row:h.closest("tr"),over:null};drag.row.classList.add("drg")});
+document.addEventListener("pointermove",e=>{if(!drag)return;const el=document.elementFromPoint(e.clientX,e.clientY),tr=el&&el.closest("tr[data-row]");
+ document.querySelectorAll("tr.over").forEach(r=>r.classList.remove("over"));drag.over=tr&&tr!==drag.row?tr.dataset.row:null;if(drag.over)tr.classList.add("over")});
+const endDrag=()=>{if(!drag)return;const d=drag;drag=null;if(d.over&&d.over!==d.c){reorder(d.c,d.over);save()}render()};
+document.addEventListener("pointerup",endDrag);document.addEventListener("pointercancel",endDrag);
+renderFx();render();
+</script>
+</body>
+</html>
+
+</body></html>
